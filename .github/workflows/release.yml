@@ -1,0 +1,33 @@
+# Builds the .jpl on every push, and attaches it to a GitHub release when you push a tag like v1.1.0.
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: us.mayson.scuteflights
+          path: publish/us.mayson.scuteflights.jpl
+      - if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: publish/us.mayson.scuteflights.jpl
+          generate_release_notes: true
